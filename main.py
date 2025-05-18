@@ -8,6 +8,7 @@ from sqlite3 import *
 
 
 dc.creare_db()
+dc.creare_db_message()
 
 API = "0769adfc5718f7c971068946"
 TOKEN = "7955185006:AAGUu8tpE0MX9RrkVhqycnaD9Iap-Dm1ru0"
@@ -18,25 +19,36 @@ bot = telebot.TeleBot(TOKEN)
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     con = connect("users.db")
-    sqll = """
+    sqll = con.execute("""
+SELECT user_id FROM user_data WHERE user_id = ?
 
 
 
 
+""", [message.from_user.id])
+    sqll = sqll.fetchall()
+    if sqll == []:
+    
+        sql = con.execute(
+        """
+        INSERT INTO user_data (user_id, chat_id) 
+        VALUES(?,?)
 
-"""
-    sql = con.execute(
-    """
-    INSERT INTO user_data (user_id, chat_id) 
-      VALUES(?,?)
+    """, [message.from_user.id, message.chat.id]
+    )
+        
 
-  """, [message.from_user.id, message.chat.id]
-)
-    con.commit()
-    if message.from_user.id in config.admins:
-        bot.send_message(message.chat.id, "Выбери роль", reply_markup=kb.keyboard_admin)
+        con.commit()
+        if message.from_user.id in config.admins:
+            bot.send_message(message.chat.id, "Выбери роль", reply_markup=kb.keyboard_admin)
+        else:
+            bot.send_message(message.chat.id, "Выберите валюту из которой будете переводить", reply_markup=kb.get_currency_keyboard1())
+
     else:
-        bot.send_message(message.chat.id, "Выберите валюту из которой будете переводить", reply_markup=kb.get_currency_keyboard1())
+        if message.from_user.id in config.admins:
+            bot.send_message(message.chat.id, "Выбери роль", reply_markup=kb.keyboard_admin)
+        else:
+            bot.send_message(message.chat.id, "Выберите валюту из которой будете переводить", reply_markup=kb.get_currency_keyboard1())
 
 @bot.callback_query_handler(func=lambda call: "user" in call.data)
 def handle_check_user(call: telebot.types.CallbackQuery):
@@ -48,14 +60,32 @@ def handle_check_admin(call: telebot.types.CallbackQuery):
     bot.delete_message(call.message.chat.id, call.message.id)
     bot.send_message(call.message.chat.id, "Выберите действие:", reply_markup=kb.keyboard_admin_ad_post)
 
-@bot.callback_query_handler(func=lambda call: "post" in call.data)
+@bot.callback_query_handler(func=lambda call: "create" in call.data)
 def handle_create_post(call: telebot.types.CallbackQuery):
     bot.delete_message(call.message.chat.id, call.message.id)
     bot.send_message(call.message.chat.id, f"Введите рекламу")
     bot.register_next_step_handler(call.message, handle_create_advert)
+
+  
+def handle_create_advert(message: telebot.types.Message):
+    con = connect("users.db")
+    sql = con.execute(
+        """
+    SELECT chat_id FROM user_data
+"""
+    )
+    sql = sql.fetchall()
     
-def handle_create_advert(message):
-    pass
+    sql2 = con.execute("""
+    INSERT INTO message_data(text, message_id, chat_id)
+    VALUES (?,?,?)
+
+
+
+""", [message.text, message.id, message.chat.id])
+    sql2 = sql2.fetchall()
+    bot.send_message("")
+
 
 
 state = {}

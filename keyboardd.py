@@ -80,5 +80,13 @@ keyboard_admin.add(button_user)
 
 keyboard_admin_ad_post = telebot.types.InlineKeyboardMarkup(row_width=1)
 button_create_ad = telebot.types.InlineKeyboardButton(text=f"Создать пост/рекламу", callback_data="create")
+button_be_user = telebot.types.InlineKeyboardButton(text=f"Стать пользователем", callback_data="user")
+button_delete_ad = telebot.types.InlineKeyboardButton(text=f"Удалить", callback_data="delete")
 keyboard_admin_ad_post.add(button_create_ad)
+keyboard_admin_ad_post.add(button_be_user)
+
+
+
+
+
 
